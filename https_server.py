@@ -17,8 +17,10 @@ httpd = http.server.HTTPServer(server_address, CustomHTTPRequestHandler)
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain(certfile="certs/server.crt", keyfile="certs/server.key")
 
+context.verify_mode = ssl.CERT_REQUIRED
+context.load_verify_locations("certs/myCA.pem") 
 
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
-print(f"Servidor HTTPS rodando em https://{HOST}:{PORT}")
+print(f"Servidor HTTPS rodando em https://{HOST}:{PORT} com autenticação mútua")
 httpd.serve_forever()
