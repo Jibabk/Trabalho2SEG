@@ -1,18 +1,18 @@
 import http.server
 import ssl
+import os
 
 HOST = 'localhost'
 PORT = 4443
 
-class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(b"<h1>Servidor HTTPS funcionando!</h1>")
+        if self.path == '/':
+            self.path = 'index.html'
+        return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
 server_address = (HOST, PORT)
-httpd = http.server.HTTPServer(server_address, SimpleHTTPRequestHandler)
+httpd = http.server.HTTPServer(server_address, CustomHTTPRequestHandler)
 
 # Criando um contexto SSL mais moderno
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
