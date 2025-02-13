@@ -1,6 +1,5 @@
 import http.server
 import ssl
-import os
 
 HOST = 'localhost'
 PORT = 4443
