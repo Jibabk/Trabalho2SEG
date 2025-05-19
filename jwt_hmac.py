@@ -6,7 +6,7 @@ SECRET_KEY = "segredo-super-seguro"
 def gerar_token(usuario):
     payload = {
         "sub": usuario,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=1)
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return token
@@ -14,8 +14,8 @@ def gerar_token(usuario):
 def verificar_token(token):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload
+        return payload  # dicionário válido
     except jwt.ExpiredSignatureError:
-        return "Token expirado"
+        return None
     except jwt.InvalidTokenError:
-        return "Token inválido"
+        return None

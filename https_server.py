@@ -23,7 +23,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
             token = auth_header.split()[1]
             payload = verificar_token(token)
-            if payload:
+
+            if isinstance(payload, dict) and "sub" in payload:
                 self.send_response(200)
                 self.end_headers()
                 response = f"Bem-vindo(a), {payload['sub']}! Aqui estão os dados secretos."
@@ -32,10 +33,6 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(403)
                 self.end_headers()
                 self.wfile.write("Token inválido ou expirado".encode("utf-8"))
-        else:
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write("Rota não encontrada".encode("utf-8"))
 
     def do_POST(self):
         if self.path == "/login":
@@ -58,6 +55,42 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(401)
                 self.end_headers()
                 self.wfile.write("Credenciais inválidas".encode("utf-8"))
+        elif self.path == "/registro":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body)
+
+            usuario = data.get("usuario")
+            senha = data.get("senha")
+
+            if not usuario or not senha:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write("Usuário e senha são obrigatórios".encode("utf-8"))
+                return
+
+            try:
+                with open("users.json", "r") as f:
+                    usuarios = json.load(f)
+            except FileNotFoundError:
+                usuarios = {}
+
+            if usuario in usuarios:
+                self.send_response(409)
+                self.end_headers()
+                self.wfile.write("Usuário já existe".encode("utf-8"))
+                return
+
+            from utils import hash_password
+            usuarios[usuario] = hash_password(senha)
+
+            with open("users.json", "w") as f:
+                json.dump(usuarios, f, indent=4)
+
+            self.send_response(201)
+            self.end_headers()
+            self.wfile.write("Usuário criado com sucesso".encode("utf-8"))
+
 
 server_address = (HOST, PORT)
 httpd = http.server.HTTPServer(server_address, CustomHTTPRequestHandler)
