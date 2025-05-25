@@ -3,7 +3,7 @@ import ssl
 import json
 
 from utils import check_password
-from jwt_hmac import gerar_token, verificar_token
+from jwt_auth import gerar_token, verificar_token
 
 HOST = 'localhost'
 PORT = 4443
@@ -22,7 +22,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
             token = auth_header.split()[1] #Pega primera string do payload
-            payload = verificar_token(token)
+            payload = verificar_token(token, algoritmo=ALGORITMO_JWT)
 
             if isinstance(payload, dict) and "sub" in payload: #Sub é um tipo de claim
                 self.send_response(200) # 200-> Ok
@@ -47,7 +47,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 usuarios = json.load(f)
 
             if usuario in usuarios and check_password(senha, usuarios[usuario]): # Verifica par usuário e senha estão no dicionário
-                token = gerar_token(usuario) # Gera token com atributos "sub" & "exp" 
+                token = gerar_token(usuario, algoritmo=ALGORITMO_JWT) # Gera token com atributos "sub" & "exp" 
                 self.send_response(200) # 200 -> Ok
                 self.end_headers()
                 self.wfile.write(token.encode()) #Retorna o token para ser utilizado
@@ -91,6 +91,16 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write("Usuário criado com sucesso".encode("utf-8"))
 
+
+
+option = input(f"Antes de iniciar, escolha o cenário de autenticação (1- HMAC, 2- PSS ou 3-Sair:)")
+
+if option == "1":
+    ALGORITMO_JWT = "hmac"
+elif option == "2":
+    ALGORITMO_JWT = "pss"
+else:
+    exit()
 
 server_address = (HOST, PORT) # Cria socket
 httpd = http.server.HTTPServer(server_address, CustomHTTPRequestHandler) # Cria servidor HTTP
