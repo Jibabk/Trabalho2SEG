@@ -13,14 +13,14 @@ def gerar_token(usuario):
         "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
     }
 
-    return jwt.encode(payload, private_key, algorithm="RS256")
+    return jwt.encode(payload, private_key, algorithm="PS256")
 
 def verificar_token(token):
     try:
         with open(PUBLIC_KEY_PATH, "rb") as f:
             public_key = f.read()
 
-        payload = jwt.decode(token, public_key, algorithms=["RS256"])
+        payload = jwt.decode(token, public_key, algorithms=["PS256"])
         return payload
     except jwt.ExpiredSignatureError:
         return None
